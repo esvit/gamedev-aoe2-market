@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+<div class="resources">
+    <div v-for="(resource) in resources" :key="resource.name" class="resource-col">
+        <template v-if="costs[resource.name]">
+            <button class="button-resource" :class="resource.name" @click="sellResource(resource)" :title="`Sell 100 ${resource.name} for ${costs[resource.name].sell} gold`">{{costs[resource.name].sell}}</button>
+            <button class="button-resource" :class="resource.name" @click="buyResource(resource)" :title="`Buy 100 ${resource.name}} for ${costs[resource.name].buy} gold`">{{costs[resource.name].buy}}</button>
+        </template>
+    </div>
+</div>
+{{balance}}
+
+<style>
+    .resources {
+        display: flex;
+        flex-direction: row;
+    }
+    .resource-col {
+        display: flex;
+        flex-direction: column;
+    }
+    .button-resource {
+        background-image: url('./assets/buttons.png');
+        overflow: hidden;
+        width: 40px;
+        height: 40px;
+        color: #fff;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        font-family: 'Courier', monospace;
+        font-smooth: never;
+        -webkit-font-smoothing : none;
+        justify-content: start;
+        align-content: start;
+        display: flex;
+    }
+
+    .button-resource.food {
+        background-position: -36px 0;
+    }
+    .button-resource.stone {
+        background-position: -72px 0;
+    }
+</style>
+<script type="module">
+  import {createApp} from 'https://unpkg.com/petite-vue?module'
+  import Resource from './js/Resource.js';
+  import Market from './js/Market.js';
+
+  let wood = new Resource('wood', 100);
+  let food = new Resource('food', 100);
+  let gold = new Resource('gold', 130);
+  let stone = new Resource('stone', 130);
+  let market = new Market(gold, { wood: 30000, gold: 200000 });
+
+  const resources = [
+    wood,
+    food,
+    gold,
+    stone
+  ];
+
+  function getCosts() {
+    const res = {};
+    resources.forEach((resource) => {
+      if (resource.name === 'gold') return;
+      res[resource.name] = {
+        sell: market.getCost(resource, 100, 'sell'),
+        buy: market.getCost(resource, 100, 'buy')
+      };
+    });
+    return res;
+  }
+
+  const app = createApp({
+    resources,
+    balance: market.balance,
+    costs: getCosts(),
+
+    buyCost(resource) {
+      return market.getCost(resource, 100, 'buy')
+    },
+    sellCost(resource) {
+      return market.getCost(resource, 100, 'sell')
+    },
+
+    buyResource(resource) {
+      market.buyResource(resource, 100);
+      this.balance = { ...market.balance };
+      this.costs = getCosts();
+    },
+    sellResource(resource) {
+      market.sellResource(resource, 100);
+      this.balance = { ...market.balance };
+      this.costs = getCosts();
+    }
+  }).mount()
+</script>
+</body>
+</html>
